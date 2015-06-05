@@ -150,18 +150,15 @@ module Xeroizer
           if @objects[model_class]
             objects = @objects[model_class].values.compact
             return false unless objects.all?(&:valid?)
-            actions = objects.group_by {|o| o.new_record? ? create_method : :http_post }
-            actions.each_pair do |http_method, records|
-              records.each_slice(chunk_size) do |some_records|
-                request = to_bulk_xml(some_records)
-                response = parse_response(self.send(http_method, request, {:summarizeErrors => false}))
-                response.response_items.each_with_index do |record, i|
-                  if record and record.is_a?(model_class)
-                    some_records[i].attributes = record.non_calculated_attributes
-                    some_records[i].errors = record.errors
-                    no_errors = record.errors.nil? || record.errors.empty? if no_errors
-                    some_records[i].saved!
-                  end
+            objects.each_slice(chunk_size) do |some_records|
+              request = to_bulk_xml(some_records)
+              response = parse_response(self.send(:http_post, request, {:summarizeErrors => false}))
+              response.response_items.each_with_index do |record, i|
+                if record and record.is_a?(model_class)
+                  some_records[i].attributes = record.non_calculated_attributes
+                  some_records[i].errors = record.errors
+                  no_errors = record.errors.nil? || record.errors.empty? if no_errors
+                  some_records[i].saved!
                 end
               end
             end
