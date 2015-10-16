@@ -2,7 +2,7 @@ module Xeroizer
   module Record
 
     class ContactGroupModel < BaseModel
-      set_permissions :read
+      set_permissions :read, :write, :update
     end
 
     class ContactGroup < Base
